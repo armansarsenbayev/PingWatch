@@ -14,13 +14,20 @@ import { registerErrorHandler } from './lib/error-handler.js';
 import { loggerOptions } from './lib/logger.js';
 import { authRoutes } from './modules/auth/routes.js';
 import { createAuthService } from './modules/auth/service.js';
+import { systemResolver, type Resolver } from './modules/checks/ssrf-guard.js';
+import { monitorRoutes } from './modules/monitors/routes.js';
+import { createMonitorsService } from './modules/monitors/service.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 
 export interface AppDeps {
   db: Db;
   redis: Redis;
   readinessChecks?: ReadinessCheck[];
+  /** DNS resolver for the SSRF guard; tests pass a fake one. */
+  resolve?: Resolver;
 }
+
+const MAX_MONITORS_PER_USER = 20;
 
 /**
  * Builds the Fastify instance without starting it.
@@ -64,6 +71,13 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     authService,
     accessTokenTtl: config.ACCESS_TOKEN_TTL,
   });
+
+  const monitorsService = createMonitorsService(deps.db, {
+    resolve: deps.resolve ?? systemResolver,
+    allowPrivate: config.ALLOW_PRIVATE_TARGETS,
+    maxPerUser: MAX_MONITORS_PER_USER,
+  });
+  await app.register(monitorRoutes, { prefix: '/api/v1', monitorsService });
 
   return app;
 }

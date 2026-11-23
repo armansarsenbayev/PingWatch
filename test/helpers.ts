@@ -6,6 +6,7 @@ import { buildApp } from '../src/app.js';
 import type { Config } from '../src/config.js';
 import { createDb, type Db } from '../src/db/client.js';
 import { createRedis } from '../src/lib/redis.js';
+import type { Resolver } from '../src/modules/checks/ssrf-guard.js';
 import type { ReadinessCheck } from '../src/routes/health.js';
 
 export const testConfig: Config = {
@@ -29,6 +30,13 @@ export interface TestContext {
   close: () => Promise<void>;
 }
 
+/**
+ * Fake DNS for tests: names ending in .internal.test resolve to a private address,
+ * everything else to a public documentation address.
+ */
+export const fakeResolver: Resolver = async (hostname) =>
+  hostname.endsWith('.internal.test') ? ['10.0.0.5'] : ['93.184.215.14'];
+
 /** Builds the real app on the integration database and Redis. */
 export async function createTestApp(readinessChecks?: ReadinessCheck[]): Promise<TestContext> {
   const databaseUrl = inject('databaseUrl');
@@ -37,7 +45,7 @@ export async function createTestApp(readinessChecks?: ReadinessCheck[]): Promise
   const redis = createRedis(redisUrl);
   const app = await buildApp(
     { ...testConfig, DATABASE_URL: databaseUrl, REDIS_URL: redisUrl },
-    { db, redis, ...(readinessChecks && { readinessChecks }) },
+    { db, redis, resolve: fakeResolver, ...(readinessChecks && { readinessChecks }) },
   );
   return {
     app,
