@@ -13,6 +13,8 @@ const EnvSchema = z.object({
     .regex(/^\d+[smhd]$/, 'use a duration like 15m')
     .default('15m'),
   REFRESH_TOKEN_TTL_DAYS: z.coerce.number().int().min(1).max(365).default(30),
+  // Never enable in production: lets monitors call localhost and private networks.
+  ALLOW_PRIVATE_TARGETS: z.stringbool().default(false),
 });
 
 export type Config = z.infer<typeof EnvSchema>;

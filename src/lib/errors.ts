@@ -18,4 +18,11 @@ export const errors = {
   invalidCredentials: () => new AppError(401, 'invalid_credentials', 'Email or password is wrong'),
   invalidToken: () => new AppError(401, 'invalid_token', 'Token is invalid or expired'),
   unauthorized: () => new AppError(401, 'unauthorized', 'Authentication is required'),
+  notFound: (what: string) => new AppError(404, 'not_found', `${what} not found`),
+  unsafeTarget: (reason: string) =>
+    new AppError(422, 'unsafe_target', `This URL cannot be monitored: ${reason}`),
+  monitorLimitReached: (limit: number) =>
+    new AppError(409, 'monitor_limit_reached', `You can have at most ${limit} monitors`),
+  invalidTimeout: () =>
+    new AppError(422, 'invalid_timeout', 'timeoutMs must be shorter than the check interval'),
 };

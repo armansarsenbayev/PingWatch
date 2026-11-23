@@ -18,6 +18,7 @@ export const testConfig: Config = {
   JWT_SECRET: 'test-secret-that-is-long-enough-for-hs256-signing',
   ACCESS_TOKEN_TTL: '15m',
   REFRESH_TOKEN_TTL_DAYS: 30,
+  ALLOW_PRIVATE_TARGETS: false,
 };
 
 export interface TestContext {
