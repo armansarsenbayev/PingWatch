@@ -25,12 +25,22 @@ services:
       timeout: 3s
       retries: 10
 
+  # Applies database migrations once and exits; the api waits for it to succeed.
+  migrate:
+    build: .
+    command: ['node', 'dist/migrate.js']
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://pingwatch:${POSTGRES_PASSWORD}@postgres:5432/pingwatch
+
   api:
     build: .
     restart: unless-stopped
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
       redis:
         condition: service_healthy
     environment:
