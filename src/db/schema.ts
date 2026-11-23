@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  bigint,
   boolean,
   index,
   integer,
@@ -77,6 +78,24 @@ export const monitors = pgTable(
   ],
 );
 
+/** One row per HTTP check. Raw rows are kept for 7 days, then only hourly aggregates remain. */
+export const checks = pgTable(
+  'checks',
+  {
+    id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+    monitorId: uuid('monitor_id')
+      .notNull()
+      .references(() => monitors.id, { onDelete: 'cascade' }),
+    checkedAt: timestamp('checked_at', { withTimezone: true }).notNull().defaultNow(),
+    isUp: boolean('is_up').notNull(),
+    statusCode: integer('status_code'),
+    latencyMs: integer('latency_ms'),
+    error: text('error'),
+  },
+  (t) => [index('checks_monitor_checked_idx').on(t.monitorId, t.checkedAt.desc())],
+);
+
 export type User = typeof users.$inferSelect;
 export type RefreshToken = typeof refreshTokens.$inferSelect;
 export type Monitor = typeof monitors.$inferSelect;
+export type Check = typeof checks.$inferSelect;
