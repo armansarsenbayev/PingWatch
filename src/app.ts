@@ -9,8 +9,11 @@ import {
 import type { Redis } from 'ioredis';
 import type { Config } from './config.js';
 import type { Db } from './db/client.js';
+import { registerAuth } from './lib/auth.js';
 import { registerErrorHandler } from './lib/error-handler.js';
 import { loggerOptions } from './lib/logger.js';
+import { authRoutes } from './modules/auth/routes.js';
+import { createAuthService } from './modules/auth/service.js';
 import { healthRoutes, type ReadinessCheck } from './routes/health.js';
 
 export interface AppDeps {
@@ -49,7 +52,18 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     nameSpace: 'pingwatch:ratelimit:',
   });
 
+  await registerAuth(app, config.JWT_SECRET);
+
   await app.register(healthRoutes, { checks: deps.readinessChecks ?? [] });
+
+  const authService = createAuthService(deps.db, {
+    refreshTokenTtlDays: config.REFRESH_TOKEN_TTL_DAYS,
+  });
+  await app.register(authRoutes, {
+    prefix: '/api/v1',
+    authService,
+    accessTokenTtl: config.ACCESS_TOKEN_TTL,
+  });
 
   return app;
 }

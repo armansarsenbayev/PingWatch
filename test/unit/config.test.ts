@@ -4,6 +4,7 @@ import { loadConfig } from '../../src/config.js';
 const validEnv = {
   DATABASE_URL: 'postgresql://user:pass@localhost:5432/pingwatch',
   REDIS_URL: 'redis://localhost:6379',
+  JWT_SECRET: 'a'.repeat(32),
 };
 
 describe('loadConfig', () => {
@@ -18,6 +19,10 @@ describe('loadConfig', () => {
 
   it('fails fast when a required variable is missing', () => {
     expect(() => loadConfig({ REDIS_URL: validEnv.REDIS_URL })).toThrow(/DATABASE_URL/);
+  });
+
+  it('rejects a JWT secret shorter than 32 characters', () => {
+    expect(() => loadConfig({ ...validEnv, JWT_SECRET: 'short' })).toThrow(/JWT_SECRET/);
   });
 
   it('rejects a database URL with the wrong protocol', () => {

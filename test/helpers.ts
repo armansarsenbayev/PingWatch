@@ -15,6 +15,9 @@ export const testConfig: Config = {
   LOG_LEVEL: 'silent',
   DATABASE_URL: 'postgresql://pingwatch:pingwatch@localhost:5432/pingwatch_test',
   REDIS_URL: 'redis://localhost:6379',
+  JWT_SECRET: 'test-secret-that-is-long-enough-for-hs256-signing',
+  ACCESS_TOKEN_TTL: '15m',
+  REFRESH_TOKEN_TTL_DAYS: 30,
 };
 
 export interface TestContext {
