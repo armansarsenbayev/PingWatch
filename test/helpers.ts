@@ -52,6 +52,6 @@ export async function createTestApp(readinessChecks?: ReadinessCheck[]): Promise
 
 /** Empties every table and the rate limit counters between tests. */
 export async function resetState(ctx: TestContext): Promise<void> {
-  await ctx.pool.query('TRUNCATE users, refresh_tokens RESTART IDENTITY CASCADE');
+  await ctx.pool.query('TRUNCATE users, refresh_tokens, monitors RESTART IDENTITY CASCADE');
   await ctx.redis.flushdb();
 }
