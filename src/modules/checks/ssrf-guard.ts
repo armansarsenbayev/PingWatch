@@ -51,7 +51,7 @@ export function isBlockedAddress(address: string): boolean {
 
 export interface TargetPolicy {
   resolve: Resolver;
-  /** Only for tests and local demos: lets monitors reach localhost and private networks. */
+  /** Only for tests and local demos: lets monitors reach localhost, private networks and any port. */
   allowPrivate: boolean;
 }
 
@@ -73,11 +73,13 @@ export async function assertSafeTarget(rawUrl: string, policy: TargetPolicy): Pr
   if (url.username || url.password) {
     throw errors.unsafeTarget('credentials inside the URL are not allowed');
   }
+  // Development mode (ALLOW_PRIVATE_TARGETS) skips the network rules below.
+  if (policy.allowPrivate) return;
+
   const port = url.port ? Number(url.port) : url.protocol === 'https:' ? 443 : 80;
   if (!ALLOWED_PORTS.has(port)) {
     throw errors.unsafeTarget('only ports 80, 443 and 8080 are allowed');
   }
-  if (policy.allowPrivate) return;
 
   const host = url.hostname.replace(/^\[(.*)\]$/, '$1');
   let addresses: string[];
