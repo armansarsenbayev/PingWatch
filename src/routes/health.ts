@@ -17,9 +17,9 @@ export interface HealthRoutesOptions {
 export const healthRoutes: FastifyPluginAsync<HealthRoutesOptions> = async (app, opts) => {
   const checks = opts.checks ?? [];
 
-  app.get('/health/live', async () => ({ status: 'ok' }));
+  app.get('/health/live', { config: { rateLimit: false } }, async () => ({ status: 'ok' }));
 
-  app.get('/health/ready', async (_request, reply) => {
+  app.get('/health/ready', { config: { rateLimit: false } }, async (_request, reply) => {
     const results = await Promise.all(
       checks.map(async ({ name, check }) => {
         try {

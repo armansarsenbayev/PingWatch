@@ -1,8 +1,26 @@
+import { sql } from 'drizzle-orm';
 import { buildApp } from './app.js';
 import { loadConfig } from './config.js';
+import { createDb } from './db/client.js';
+import { createRedis } from './lib/redis.js';
 
 const config = loadConfig();
-const app = await buildApp(config);
+const { db, pool } = createDb(config.DATABASE_URL);
+const redis = createRedis(config.REDIS_URL);
+
+const app = await buildApp(config, {
+  db,
+  redis,
+  readinessChecks: [
+    { name: 'postgres', check: async () => void (await db.execute(sql`select 1`)) },
+    { name: 'redis', check: async () => void (await redis.ping()) },
+  ],
+});
+
+// Close connections after the server has stopped accepting requests.
+app.addHook('onClose', async () => {
+  await Promise.all([pool.end(), redis.quit()]);
+});
 
 // Graceful shutdown: stop accepting requests, let in-flight ones finish, then exit.
 const shutdown = async (signal: NodeJS.Signals) => {
