@@ -48,6 +48,7 @@ services:
       LOG_LEVEL: ${LOG_LEVEL:-info}
       DATABASE_URL: postgresql://pingwatch:${POSTGRES_PASSWORD}@postgres:5432/pingwatch
       REDIS_URL: redis://redis:6379
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET in .env}
     ports:
       - '3000:3000'
 
