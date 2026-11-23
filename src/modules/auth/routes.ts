@@ -24,7 +24,11 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
     '/auth/register',
     {
       config: { rateLimit: loginRateLimit },
-      schema: { body: credentialsSchema, response: { 201: z.object({ user: userSchema }) } },
+      schema: {
+        tags: ['auth'],
+        body: credentialsSchema,
+        response: { 201: z.object({ user: userSchema }) },
+      },
     },
     async (request, reply) => {
       const user = await authService.register(request.body);
@@ -36,7 +40,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
     '/auth/login',
     {
       config: { rateLimit: loginRateLimit },
-      schema: { body: credentialsSchema, response: { 200: tokenPairSchema } },
+      schema: { tags: ['auth'], body: credentialsSchema, response: { 200: tokenPairSchema } },
     },
     async (request) => {
       const { user, refreshToken } = await authService.login(request.body);
@@ -46,7 +50,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
 
   app.post(
     '/auth/refresh',
-    { schema: { body: refreshSchema, response: { 200: tokenPairSchema } } },
+    { schema: { tags: ['auth'], body: refreshSchema, response: { 200: tokenPairSchema } } },
     async (request) => {
       const { userId, refreshToken } = await authService.refresh(request.body.refreshToken);
       return tokenPair(userId, refreshToken);
@@ -55,7 +59,7 @@ export const authRoutes: FastifyPluginAsyncZod<AuthRoutesOptions> = async (app, 
 
   app.post(
     '/auth/logout',
-    { schema: { body: refreshSchema, response: { 204: z.null() } } },
+    { schema: { tags: ['auth'], body: refreshSchema, response: { 204: z.null() } } },
     async (request, reply) => {
       await authService.logout(request.body.refreshToken);
       return reply.code(204).send(null);

@@ -155,4 +155,13 @@ describe('monitors', () => {
     expect(statuses.filter((s) => s === 201)).toHaveLength(20);
     expect(statuses.filter((s) => s === 409)).toHaveLength(5);
   });
+
+  it('serves OpenAPI docs', async () => {
+    const res = await ctx.app.inject({ method: 'GET', url: '/docs/json' });
+    expect(res.statusCode).toBe(200);
+    const spec = res.json<{ paths: Record<string, unknown> }>();
+    expect(Object.keys(spec.paths)).toEqual(
+      expect.arrayContaining(['/api/v1/monitors', '/api/v1/monitors/{id}', '/api/v1/auth/login']),
+    );
+  });
 });

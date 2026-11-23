@@ -10,6 +10,7 @@ import type { Redis } from 'ioredis';
 import type { Config } from './config.js';
 import type { Db } from './db/client.js';
 import { registerAuth } from './lib/auth.js';
+import { registerDocs } from './lib/docs.js';
 import { registerErrorHandler } from './lib/error-handler.js';
 import { loggerOptions } from './lib/logger.js';
 import { authRoutes } from './modules/auth/routes.js';
@@ -59,6 +60,7 @@ export async function buildApp(config: Config, deps: AppDeps): Promise<FastifyIn
     nameSpace: 'pingwatch:ratelimit:',
   });
 
+  await registerDocs(app);
   await registerAuth(app, config.JWT_SECRET);
 
   await app.register(healthRoutes, { checks: deps.readinessChecks ?? [] });
