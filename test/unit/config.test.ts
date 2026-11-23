@@ -31,3 +31,14 @@ describe('loadConfig', () => {
     );
   });
 });
+
+describe('loadWorkerConfig', () => {
+  it('does not require JWT_SECRET and has worker defaults', async () => {
+    const { loadWorkerConfig } = await import('../../src/config.js');
+    const config = loadWorkerConfig({
+      DATABASE_URL: 'postgresql://user:pass@localhost:5432/pingwatch',
+      REDIS_URL: 'redis://localhost:6379',
+    });
+    expect(config).toMatchObject({ CHECK_WORKER_CONCURRENCY: 20, SCHEDULER_TICK_MS: 5000 });
+  });
+});

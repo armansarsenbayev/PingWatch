@@ -1,5 +1,5 @@
-import type { FastifyServerOptions } from 'fastify';
-import type { Config } from '../config.js';
+import type { LoggerOptions } from 'pino';
+import type { BaseConfig } from '../config.js';
 
 /** Paths that must never reach the logs. */
 export const redactPaths = [
@@ -11,7 +11,7 @@ export const redactPaths = [
   '*.refreshToken',
 ];
 
-export function loggerOptions(config: Config): FastifyServerOptions['logger'] {
+export function loggerOptions(config: BaseConfig): LoggerOptions {
   return {
     level: config.LOG_LEVEL,
     redact: { paths: redactPaths, censor: '[REDACTED]' },

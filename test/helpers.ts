@@ -6,6 +6,7 @@ import { buildApp } from '../src/app.js';
 import type { Config } from '../src/config.js';
 import { createDb, type Db } from '../src/db/client.js';
 import { createRedis } from '../src/lib/redis.js';
+import { createChecksQueue, type ChecksQueue } from '../src/modules/checks/queue.js';
 import type { Resolver } from '../src/modules/checks/ssrf-guard.js';
 import type { ReadinessCheck } from '../src/routes/health.js';
 
@@ -27,6 +28,7 @@ export interface TestContext {
   db: Db;
   pool: pg.Pool;
   redis: Redis;
+  checksQueue: ChecksQueue;
   close: () => Promise<void>;
 }
 
@@ -43,6 +45,7 @@ export async function createTestApp(readinessChecks?: ReadinessCheck[]): Promise
   const redisUrl = inject('redisUrl');
   const { db, pool } = createDb(databaseUrl);
   const redis = createRedis(redisUrl);
+  const checksQueue = createChecksQueue(redis);
   const app = await buildApp(
     { ...testConfig, DATABASE_URL: databaseUrl, REDIS_URL: redisUrl },
     { db, redis, resolve: fakeResolver, ...(readinessChecks && { readinessChecks }) },
@@ -52,8 +55,10 @@ export async function createTestApp(readinessChecks?: ReadinessCheck[]): Promise
     db,
     pool,
     redis,
+    checksQueue,
     close: async () => {
       await app.close();
+      await checksQueue.close();
       await Promise.all([pool.end(), redis.quit()]);
     },
   };
